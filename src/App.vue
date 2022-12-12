@@ -1,12 +1,11 @@
 <script setup>
 import { onBeforeMount,ref,reactive } from 'vue'
-import { getLocalPlayBook,getRemotePlayBook,getRemoteDefaultPlayBook } from './api/api'
 import { isUndefined } from './utils/isUndefined'
-import { config,demoData } from './config/config'
-import SlideShow from './components/SlideShow.vue'
+import { config } from './config/config'
 import SliderControl from './components/SliderControl.vue'
+import defaultImage from "./assets/kimacloud1920x1080.jpg"
 
-const editRegions = ref({})
+let playData = ref({})
 
 const isLocal = window.location.href.includes('localhost')
 
@@ -16,53 +15,58 @@ if(queryUri.length==2){
   paramsUri = "?"+queryUri[1]
 }
 const params = new URLSearchParams(paramsUri)
-const appID = params.get("appID")
-const thingName = params.get("thingName")
+const mediaType = params.get("type")
+const mediaFileName = params.get("asset")
+const orgID = params.get("orgID")
+
+console.log(mediaType)
+console.log(mediaFileName)
+console.log(orgID)
 
 onBeforeMount(async ()=>{
-  let apiData = {}
-  if(!isUndefined(appID)){
-    if(isLocal){
-      try {
-        apiData = await getLocalPlayBook({appID:appID})
-          // apiData = await getRemotePlayBook({appID:appID,thingName:thingName})
-      } catch (error) {
-        console.log(error)
-      }
-    } else {
-      if(isUndefined(thingName)){
-        try {
-          apiData = await getRemoteDefaultPlayBook({appID:appID})
-        } catch (error) {
-          console.log(error)
-        }
-      } else {
-        try {
-          apiData = await getRemotePlayBook({appID:appID,thingName:thingName})
-        } catch (error) {
-          console.log(error)
-        }
-      }
-    }
-  } else {
-    console.log("to display demo site when appID is null")
-  }
+  let mediaData = {}
 
-  if(!isUndefined(apiData.data)){
-    if(!isUndefined(apiData.data.editRegions)){
-      editRegions.value = apiData.data.editRegions
+  if(isLocal){
+    if(!isUndefined(mediaType)&&!isUndefined(mediaFileName)){
+      mediaData={
+        type:mediaType,
+        src:config.localAssetSite+mediaFileName
+      }
+      console.log("display image",mediaData);
+    } else {
+      //demo default local asset
+      console.log("display default");
+      
+      mediaData={
+        type:"image",
+        src:defaultImage
+      }
     }
-  } else {
-    // editRegions.value = [{assets:[{attribute:config().defaultDisplayImg,name:"defaultImage"}],type:"image",limit:100,regionName:"images",params:{duration:10000000,effection:"fade"}}]
-    editRegions.value = demoData
-    console.log("bypass the apiData");
+  } else{
+    console.log("remote access")
+    if(!isUndefined(mediaType)&&!isUndefined(mediaFileName)&&!isUndefined(orgID)){
+      mediaData={
+        type:mediaType,
+        src:config.remoteAssetSite+orgID+"/assets/"+mediaFileName
+      }
+      console.log(mediaData)
+      
+    } else {
+      //default remote asset
+      console.log("params is not correct")
+      
+      mediaData={
+        type:"image",
+        src:config.remoteDefaultAssetImage
+      }
+    }
   }
+  playData.value = mediaData
 })
  
 </script>
 <template>
-  <!-- <SlideShow :editRegions = editRegions /> -->
-  <SliderControl :editRegions = editRegions />
+  <SliderControl :mediaData = playData />
 </template>
 
 <style>

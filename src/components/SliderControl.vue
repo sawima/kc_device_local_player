@@ -1,58 +1,26 @@
 <template>
   <div>
-    <template v-if="multiImgs.length>0">
-      <template v-if="effection=='slider'">
-        <SliderPlayer :multiImgs="multiImgs" :duration="duration" />
-      </template>
-      <template v-else-if="effection=='fade'">
-        <FadePlayer :multiImgs="multiImgs" :duration="duration" />
-      </template>
-      <template v-else>
-        <FadePlayer :multiImgs="multiImgs" :duration="duration" />
-      </template>
+    <!-- <SingleImage :url="defaultImage" /> -->
+    <template v-if="mediaData.type=='image'">
+      <SingleImage :url="mediaData.src" />
+    </template>
+    <template v-else-if="mediaData.type=='video'">
+        <SingleVideo :url="mediaData.src" />
+    </template>
+    <template v-else>
+      <SingleImage :url="config.remoteDefaultAssetImage" />
     </template>
   </div>
 </template>
 
 <script setup>
-import { ref, toRefs, watch, onBeforeMount } from "vue";
-import { isUndefined } from "../utils/isUndefined";
 import { config } from "../config/config";
-import SliderPlayer from "./SliderPlayer.vue";
-import FadePlayer from "./FadePlayer.vue";
+import SingleImage from "./SingleImage.vue";
+import SingleVideo from "./SingleVideo.vue";
+import defaultImage from "../assets/kimacloud1920x1080.jpg"
 
 const props = defineProps({
-  editRegions: Object
-});
-const { editRegions } = toRefs(props);
-const duration = ref(30000);
-const effection = ref("fade");
-const multiImgs = ref([]);
-
-function calPlayData(regionData) {
-  if (!isUndefined(regionData[0])) {
-    if (!isUndefined(regionData[0].assets)) {
-      multiImgs.value = regionData[0].assets;
-      if (!isUndefined(regionData[0].params)) {
-        if (!isUndefined(regionData[0].params.duration)) {
-          try {
-            duration.value = parseInt(regionData[0].params.duration);
-          } catch (e) {
-            console.log(e);
-          }
-        }
-        if(multiImgs.length>1){
-          if(!isUndefined(regionData[0].params.effection)) {
-            effection.value = regionData[0].params.effection;
-          }
-        }
-      }
-    }
-  }
-}
-calPlayData(editRegions.value)
-watch(editRegions, (newData, oldData) => {
-  calPlayData(newData);
+  mediaData: Object
 });
 </script>
 
